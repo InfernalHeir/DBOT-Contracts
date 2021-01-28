@@ -10,7 +10,7 @@ contract Whitelist is Ownable {
 
  // create modiifer for initial validation
  modifier isWhiteListed(address _beneficiary){
-     require(whitelisted[_beneficiary],"WHITELIST: Beneficiary is not whitelisted!");
+     require(!whitelisted[_beneficiary],"WHITELIST: Beneficiary is not whitelisted!");
      _;
  }
  // add single address to whitelist mapping.

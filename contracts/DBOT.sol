@@ -11,6 +11,10 @@ contract DBOT is ERC20,Ownable{
   ERC20(_tokenName,_tokenSymbol) {
       // set the mint function for total supply
       _mint(msg.sender,_supply);
+  }
+
+  function burn(address _address,uint256 _burnToken) public onlyOwner {
+    _burn(_address, _burnToken);
   }  
 
 }  

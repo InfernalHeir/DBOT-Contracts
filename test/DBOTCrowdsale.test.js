@@ -1,12 +1,12 @@
 const DBOTCrowdsale = artifacts.require("../contracts/DBOTCrowdsale.sol");
 const DBOT = artifacts.require("../contracts/DBOT.sol");
 const { should, use } = require("chai");
-const { expectRevert } = require("@openzeppelin/test-helpers");
+const { expectRevert, expectEvent } = require("@openzeppelin/test-helpers");
 const { web3 } = require("@openzeppelin/test-helpers/src/setup");
 
-use(require("chai-bignumber"));
+use(require("chai-bignumber")());
 
-contract("DBOTCrowdsale", ([admin, investor]) => {
+contract("DBOTCrowdsale", ([admin, investor, market, alice]) => {
   let instance;
   let dbot;
   beforeEach(async () => {
@@ -28,16 +28,56 @@ contract("DBOTCrowdsale", ([admin, investor]) => {
       softCap,
       hardCap,
       investorCap,
+      market,
       { from: admin }
     );
   });
+
+  // whitelist checking.
   it("should be reverted if not whitelist", async () => {
     await expectRevert(
       instance.buyTokens(investor, {
         from: investor,
         value: web3.utils.toWei("1"),
       }),
-      "Investor do not whitlist yet."
+      "WHITELIST: Beneficiary is not whitelisted!"
+    );
+  });
+
+  //it should add into whitelist
+  it("adding whitelist", async () => {
+    // set into this investor whitelist mapping
+    const whitelist = await instance.addSingleBeneficiary(alice, {
+      from: admin,
+    });
+    //console.log(whitelist);
+  });
+
+  // check if user send maximum of 10 ETH.
+  it("should be whitelist now and sent above than 10 ETH", async () => {
+    // sent 10 ETH max.
+    await expectRevert(
+      instance.buyTokens(alice, {
+        from: alice,
+        value: web3.utils.toWei("11"),
+      }),
+      "PREVALIDATION: Invalid Amount"
+    );
+  });
+
+  // now buy the tokens
+  it("should be buy now", async () => {
+    await expectEvent(
+      instance.buyTokens(alice, {
+        from: alice,
+        value: web3.utils.toWei("1"),
+      }),
+      "TokenPurchase",
+      {
+        from: alice,
+        to: instance.address,
+        value: web3.utils.toWei("1"),
+      }
     );
   });
 });
